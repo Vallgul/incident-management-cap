@@ -11,7 +11,8 @@
     "@sap-cloud-sdk/resilience": "^3.25.0",
     "@sap-cloud-sdk/util": "^3.25.0",
     "@sap/cds": "^8",
-    "express": "^4"
+    "express": "^4",
+    "@cap-js/hana": "^1"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.8.0",
@@ -58,7 +59,13 @@
       "API_BUSINESS_PARTNER": {
         "kind": "odata-v2",
         "model": "srv/external/API_BUSINESS_PARTNER"
+      },
+      "[production]": {
+        "db": "hana"
       }
+    },
+    "sql": {
+      "native_hana_associations": false
     }
   }
 }
