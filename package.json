@@ -12,7 +12,8 @@
     "@sap-cloud-sdk/util": "^3.25.0",
     "@sap/cds": "^8",
     "express": "^4",
-    "@cap-js/hana": "^1"
+    "@cap-js/hana": "^1",
+    "@sap/xssec": "^4"
   },
   "devDependencies": {
     "@cap-js/cds-types": "^0.8.0",
@@ -61,7 +62,8 @@
         "model": "srv/external/API_BUSINESS_PARTNER"
       },
       "[production]": {
-        "db": "hana"
+        "db": "hana",
+        "auth": "xsuaa"
       }
     },
     "sql": {
