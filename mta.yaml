@@ -11,7 +11,8 @@ build-parameters:
       commands:
         - npm ci
         - npx cds build --production
-        - mkdir -p resources 
+        - mkdir -p resources
+        - cp workzone/cdm.json resources/cdm.json    
 modules:
   - name: incident-management-srv
     type: nodejs
@@ -27,9 +28,9 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:
-      - name: incident-management-destination
       - name: incident-management-db
       - name: incident-management-auth
+      - name: incident-management-destination
 
   - name: incident-management-db-deployer
     type: hdb
@@ -42,7 +43,17 @@ modules:
   - name: incident-management-app-deployer
     type: com.sap.application.content
     path: .
+    parameters:
+      config:
+        destinations:
+        - forwardAuthToken: true
+          name: incident-management-srv-api
+          url: ~{srv-api/srv-url}
+        - name: ui5
+          url: https://ui5.sap.com
     requires:
+      - name: srv-api
+      - name: incident-management-auth
       - name: incident-management-html5-repo-host
         parameters:
           content-target: true
@@ -69,6 +80,10 @@ modules:
   - name: incident-management-destinations
     type: com.sap.application.content
     requires:
+      - name: incidents_html_repo_runtime
+        parameters:
+          service-key:
+            name: incidents-html5-app-runtime-service-key
       - name: incident-management-auth
         parameters:
           service-key:
@@ -85,50 +100,15 @@ modules:
       no-source: true
     parameters:
       content:
-        instance:
+        subaccount:
           existing_destinations_policy: update
           destinations:
-            - Name: incident-management-html5-repository
-              ServiceInstanceName: incident-management-html5-repo-host
-              ServiceKeyName: incident-management-html5-repo-host-key
-              sap.cloud.service: incidentmanagement.service
-            - Name: incident-management-auth
-              Authentication: OAuth2UserTokenExchange
-              ServiceInstanceName: incident-management-auth
-              ServiceKeyName: incident-management-auth-key
-              sap.cloud.service: incidentmanagement.service
+            - Name: incident-management_cdm
+              ServiceInstanceName: incidents-html5-app-runtime-service
+              ServiceKeyName: incidents-html5-app-runtime-service-key
+              URL: https://html5-apps-repo-rt.${default-domain}/applications/cdm/incidentmanagement.service
 
 resources:
-  - name: incident-management-destination
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: destination
-      service-plan: lite
-      config:
-        HTML5Runtime_enabled: true
-        init_data:
-          instance:
-            existing_destinations_policy: update
-            destinations:
-              - Name: incident-management-srv-api
-                URL: ~{srv-api/srv-url}
-                Authentication: NoAuthentication
-                Type: HTTP
-                ProxyType: Internet
-                HTML5.ForwardAuthToken: true
-                HTML5.DynamicDestination: true
-              - Name: ui5
-                URL: https://ui5.sap.com
-                Authentication: NoAuthentication
-                Type: HTTP
-                ProxyType: Internet
-    requires:
-      - name: srv-api
-        group: destinations
-        properties:
-          name: srv-api # must be used in xs-app.json as well
-          url: ~{srv-url}
-          forwardAuthToken: true
   - name: incident-management-db
     type: com.sap.xs.hdi-container
     parameters:
@@ -148,3 +128,26 @@ resources:
       config:
         xsappname: incident-management-${org}-${space}
         tenant-mode: dedicated
+  - name: incidents_html_repo_runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-name: incidents-html5-app-runtime-service
+      service-plan: app-runtime
+  - name: incident-management-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        init_data:
+          subaccount:
+            existing_destinations_policy: update
+            destinations:
+              - Authentication: NoAuthentication
+                Name: incident-management-rt
+                ProxyType: Internet
+                Type: HTTP
+                URL: https://trial-usa-pytq1dl7.launchpad.${default-domain}
+                CEP.HTML5contentprovider: true
+
