@@ -52,7 +52,7 @@ modules:
         - name: incidentmanagementincidents
           artifacts:
             - incidents.zip
-          target-path: app/
+          target-path: resources/
 
   - name: incidentmanagementincidents
     type: html5
